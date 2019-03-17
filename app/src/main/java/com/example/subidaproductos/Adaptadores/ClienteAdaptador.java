@@ -12,9 +12,11 @@ import com.example.subidaproductos.Entidades.Cliente;
 import com.example.subidaproductos.R;
 import com.firebase.ui.firestore.FirestoreRecyclerAdapter;
 import com.firebase.ui.firestore.FirestoreRecyclerOptions;
+import com.google.firebase.firestore.DocumentSnapshot;
 
 public class ClienteAdaptador extends FirestoreRecyclerAdapter<Cliente, ClienteAdaptador.ClienteViewHolder> {
     Context  context;
+    OnItemClickListener listener;
 
     public ClienteAdaptador(@NonNull FirestoreRecyclerOptions<Cliente> options, Context context) {
         super(options);
@@ -46,6 +48,25 @@ public class ClienteAdaptador extends FirestoreRecyclerAdapter<Cliente, ClienteA
             nombre = itemView.findViewById(R.id.txt_nombre_item);
             descripcion = itemView.findViewById(R.id.txt_detalle_item);
             numero = itemView.findViewById(R.id.txt_numero_item);
+
+
+            itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    int position = getAdapterPosition();
+                    if (position != RecyclerView.NO_POSITION && listener != null){
+                        listener.onItemClick(getSnapshots().getSnapshot(position),position);
+                    }
+                }
+            });
         }
+    }
+
+    public interface OnItemClickListener{
+        void onItemClick(DocumentSnapshot documentSnapshot, int position);
+    }
+
+    public void setOnItemClickListener(OnItemClickListener listener){
+        this.listener = listener;
     }
 }
