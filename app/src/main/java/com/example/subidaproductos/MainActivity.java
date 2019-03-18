@@ -2,6 +2,7 @@ package com.example.subidaproductos;
 
 import android.content.Context;
 import android.content.Intent;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -12,9 +13,13 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.subidaproductos.Actividades.CrearCliente;
+import com.example.subidaproductos.Actividades.CrearLocal;
 import com.example.subidaproductos.Adaptadores.ClienteAdaptador;
 import com.example.subidaproductos.Entidades.Cliente;
+import com.example.subidaproductos.Entidades.Local;
 import com.firebase.ui.firestore.FirestoreRecyclerOptions;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -27,10 +32,14 @@ public class MainActivity extends AppCompatActivity {
     TextView txtNomCliente;
     Button btnNuevoCliente;
     Button btnEscogerClientes;
+    Button btnNuevoLocal;
+    Button btnSubir;
     Context context;
     FirebaseFirestore db;
+    String idCliente;
 
     public static Cliente cliente;
+    public static Local local;
 
 
     ClienteAdaptador adaptadorCliente;
@@ -42,20 +51,21 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
 
+        txtNomCliente = findViewById(R.id.txt_nocliente);
+        btnNuevoCliente = findViewById(R.id.btn_crear_cliente);
+        btnEscogerClientes = findViewById(R.id.btn_escojer_cliente);
+        btnNuevoLocal = findViewById(R.id.btn_crear_local);
+        btnSubir = findViewById(R.id.btn_subir);
+
 
         db = FirebaseFirestore.getInstance();
         context = getApplicationContext();
 
-
-
-        txtNomCliente = findViewById(R.id.txt_nocliente);
-        btnNuevoCliente = findViewById(R.id.btn_crear_cliente);
-        btnEscogerClientes = findViewById(R.id.btn_escojer_cliente);
-
-
         rcvMain = findViewById(R.id.rcv_main);
         rcvMain.setHasFixedSize(true);
         rcvMain.setLayoutManager(new LinearLayoutManager(this));
+
+
         irllenandoDatos();
         inicializarAdaptadorClientes();
 
@@ -74,12 +84,69 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        btnNuevoLocal.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(MainActivity.this, CrearLocal.class));
+            }
+        });
+
+        btnSubir.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                subirDatosFirestore();
+            }
+        });
+
+    }
+
+    private void subirDatosFirestore() {
+        if (cliente == null && local == null) {
+            Toast.makeText(MainActivity.this, "Datos insificientes", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (cliente != null && idCliente == null) {
+
+            clienteNuevo();
+
+        }
+        if (cliente != null && idCliente != null && local != null) {
+
+            localNuevoClienteViejo();
+        }
+
+
+    }
+
+    private void localNuevoClienteViejo() {
+        // metodo para crear local con cliente ya exixstente
+
+    }
+
+    private void clienteNuevo() {
+
+        db.collection("clientes").document().set(cliente).addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void aVoid) {
+                Toast.makeText(context, cliente.getNombre() + " cargado", Toast.LENGTH_SHORT).show();
+                cliente = null;
+                txtNomCliente.setText("No cliente");
+            }
+        })
+
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+
+                        Toast.makeText(context, "no realzado", Toast.LENGTH_SHORT).show();
+                    }
+                });
     }
 
     private void irllenandoDatos() {
 
 
-        if (cliente != null)txtNomCliente.setText(cliente.getNombre());
+        if (cliente != null) txtNomCliente.setText(cliente.getNombre());
     }
 
     private void inicializarAdaptadorClientes() {
@@ -100,6 +167,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemClick(DocumentSnapshot documentSnapshot, int position) {
                 cliente = documentSnapshot.toObject(Cliente.class);
+                idCliente = documentSnapshot.getId();
                 String nombre = cliente.getNombre();
                 txtNomCliente.setText(nombre);
                 Toast.makeText(context, nombre + " escogido", Toast.LENGTH_SHORT).show();

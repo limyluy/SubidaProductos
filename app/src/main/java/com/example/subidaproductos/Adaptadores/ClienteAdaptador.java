@@ -27,7 +27,10 @@ public class ClienteAdaptador extends FirestoreRecyclerAdapter<Cliente, ClienteA
     protected void onBindViewHolder(@NonNull ClienteViewHolder holder, int position, @NonNull Cliente model) {
         holder.nombre.setText(model.getNombre());
         holder.descripcion.setText("numero de locales: ");
-        holder.numero.setText(String.valueOf(model.getLocales().size()));
+        if (model.getLocales() != null){
+        holder.numero.setText(String.valueOf(model.getLocales().size()));}else{
+            holder.numero.setText("0");
+        }
     }
 
     @NonNull

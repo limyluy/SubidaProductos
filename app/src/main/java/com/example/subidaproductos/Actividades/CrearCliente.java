@@ -6,18 +6,11 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.subidaproductos.Entidades.Cliente;
 import com.example.subidaproductos.MainActivity;
 import com.example.subidaproductos.R;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.util.List;
-import java.util.Map;
 
 public class CrearCliente extends AppCompatActivity {
 
