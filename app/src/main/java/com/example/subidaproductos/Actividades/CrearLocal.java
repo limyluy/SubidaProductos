@@ -1,5 +1,6 @@
 package com.example.subidaproductos.Actividades;
 
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -9,10 +10,12 @@ import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
+import android.webkit.MimeTypeMap;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -21,9 +24,18 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.subidaproductos.Entidades.Cliente;
+import com.example.subidaproductos.Entidades.Local;
 import com.example.subidaproductos.MainActivity;
 import com.example.subidaproductos.R;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.firestore.GeoPoint;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.StorageTask;
+import com.google.firebase.storage.UploadTask;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
@@ -55,11 +67,17 @@ public class CrearLocal extends AppCompatActivity {
     private Uri imgLocalUri;
     private Uri imgLogoUri;
 
+    private List<String> etiquetaRes = new ArrayList<>();
+    private List<String> clienteRes = new ArrayList<>();
     private boolean locationPrendida;
     private boolean trazado;
     private Button btnCrear;
     private Button btnCancelar;
     LocationManager locationManager;
+
+    private StorageReference mStoraRef;
+    private StorageTask mUploadTask;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,11 +103,7 @@ public class CrearLocal extends AppCompatActivity {
         imgLogo = findViewById(R.id.img_logo);
 
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-
-        if (!isLocationEnabled()) {
-            showAlert();
-        }
-
+        mStoraRef = FirebaseStorage.getInstance().getReference("uploads");
 
         btnCrear.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -98,8 +112,15 @@ public class CrearLocal extends AppCompatActivity {
                     Toast.makeText(CrearLocal.this, "Datos insificientes", Toast.LENGTH_SHORT).show();
                 } else {
                     crearLocalNuevo();
+                    startActivity(new Intent(CrearLocal.this,MainActivity.class));
                 }
 
+            }
+        });
+        btnCancelar.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(CrearLocal.this,MainActivity.class));
             }
         });
 
@@ -116,6 +137,35 @@ public class CrearLocal extends AppCompatActivity {
                 buscadorImagen(IMAGEN_PUESTA_LOGO);
             }
         });
+
+        btnAddEtiquetas.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                llenarEtiquetas();
+            }
+        });
+    }
+
+    private void llenarEtiquetas() {
+        if (edtEtiquetas.getText().toString().isEmpty()){
+            Toast.makeText(this, "Campo basio", Toast.LENGTH_SHORT).show();
+        }else{
+            etiquetaRes.add(edtEtiquetas.getText().toString());
+            mostrarEtiquetas();
+            edtEtiquetas.setText("");
+        }
+    }
+
+    private void mostrarEtiquetas() {
+
+        String resultados = "";
+        for (int i = 0; i < etiquetaRes.size(); i++)
+            if(i + 1 < etiquetaRes.size())
+                resultados += etiquetaRes.get(i) + " | ";
+            else
+                resultados += etiquetaRes.get(i);
+
+        txtEtiquetas.setText(resultados);
     }
 
     private void buscadorImagen(int codImagen) {
@@ -145,7 +195,10 @@ public class CrearLocal extends AppCompatActivity {
         int precio = 0;
 
 
-        ubicacion = obtenerGeoPoint();
+        if (!isLocationEnabled()) {
+            showAlert(); return;
+        }else{ubicacion = obtenerGeoPoint();}
+
         if (ubicacion == null) {
             Toast.makeText(CrearLocal.this, "No localizacion", Toast.LENGTH_SHORT).show();
             return;
@@ -159,7 +212,59 @@ public class CrearLocal extends AppCompatActivity {
         tarjeta = chbTarjeta.isActivated();
         garantia =chbGarantia.isActivated();
 
+        if (imgLogoUri == null || imgLocalUri == null){
+            Toast.makeText(this, "no imagen seleccionada", Toast.LENGTH_SHORT).show();
+            uriImgLocal = "no imagen";
+            iruImgLogo = "no imagen";
+        }else{
+           uriImgLocal = cargarImages(imgLocalUri);
+           iruImgLogo = cargarImages(imgLogoUri);
+        }
 
+        if (etiquetaRes.isEmpty()){
+            etiquetas = null;
+        }else{
+            etiquetas = etiquetaRes;
+        }
+
+        clientes = null;
+
+
+        Local localCreado = new Local(nombre,descripcion,ubicacion,atencion,calidad,precio,telefono,tarjeta,garage,garantia,uriImgLocal,iruImgLogo,0,true,clientes,etiquetas);
+
+        MainActivity.local = localCreado;
+
+
+
+    }
+
+    private String cargarImages(Uri uri) {
+        StorageReference Reference = mStoraRef.child(System.currentTimeMillis() +"."
+                +getFileExtencion(uri));
+        String direccion = null;
+
+        mUploadTask = Reference.putFile(uri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                Task task = taskSnapshot.getStorage().getDownloadUrl();
+                    while (!task.isSuccessful());
+                    Uri uri1 = (Uri) task.getResult();
+
+                    String direccion = uri1.toString();
+
+
+
+
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Toast.makeText(CrearLocal.this, "Error al Cargar", Toast.LENGTH_SHORT).show();
+
+            }
+        });
+
+        return direccion;
     }
 
     private GeoPoint obtenerGeoPoint() {
@@ -240,5 +345,11 @@ public class CrearLocal extends AppCompatActivity {
 
             Picasso.with(this).load(imgLogoUri).into(imgLogo);
         }
+    }
+
+    private String getFileExtencion( Uri uri){
+        ContentResolver cR = getContentResolver();
+        MimeTypeMap mime = MimeTypeMap.getSingleton();
+        return mime.getExtensionFromMimeType(cR.getType(uri));
     }
 }

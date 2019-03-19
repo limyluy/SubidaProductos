@@ -30,6 +30,7 @@ import org.json.JSONObject;
 public class MainActivity extends AppCompatActivity {
 
     TextView txtNomCliente;
+    TextView txtNomLocal;
     Button btnNuevoCliente;
     Button btnEscogerClientes;
     Button btnNuevoLocal;
@@ -52,6 +53,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         txtNomCliente = findViewById(R.id.txt_nocliente);
+        txtNomLocal = findViewById(R.id.txt_nolocal);
         btnNuevoCliente = findViewById(R.id.btn_crear_cliente);
         btnEscogerClientes = findViewById(R.id.btn_escojer_cliente);
         btnNuevoLocal = findViewById(R.id.btn_crear_local);
@@ -147,6 +149,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         if (cliente != null) txtNomCliente.setText(cliente.getNombre());
+        if (local != null)txtNomLocal.setText(local.getNombre());
     }
 
     private void inicializarAdaptadorClientes() {
