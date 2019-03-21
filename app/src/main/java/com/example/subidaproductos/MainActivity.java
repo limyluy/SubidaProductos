@@ -13,6 +13,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.subidaproductos.Actividades.CrearCliente;
+import com.example.subidaproductos.Actividades.CrearEvento;
 import com.example.subidaproductos.Actividades.CrearLocal;
 import com.example.subidaproductos.Actividades.CrearProducto;
 import com.example.subidaproductos.Adaptadores.ClienteAdaptador;
@@ -37,6 +38,7 @@ public class MainActivity extends AppCompatActivity {
     Button btnNuevoCliente;
     Button btnEscogerClientes;
     Button btnNuevoLocal;
+    Button btnNuevoEvento;
     Button btnSubir;
     Button btnNuevoProducto;
     Context context;
@@ -63,7 +65,8 @@ public class MainActivity extends AppCompatActivity {
         btnNuevoCliente = findViewById(R.id.btn_crear_cliente);
         btnEscogerClientes = findViewById(R.id.btn_escojer_cliente);
         btnNuevoLocal = findViewById(R.id.btn_crear_local);
-        btnNuevoProducto = findViewById(R.id.btn_crear_producto);
+
+        btnNuevoEvento = findViewById(R.id.btn_crear_evento);
         btnSubir = findViewById(R.id.btn_subir);
 
 
@@ -111,6 +114,13 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 startActivity(new Intent(MainActivity.this, CrearProducto.class));
+            }
+        });
+
+        btnNuevoEvento.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(MainActivity.this, CrearEvento.class));
             }
         });
 
