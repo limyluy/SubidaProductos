@@ -14,9 +14,11 @@ import android.widget.Toast;
 
 import com.example.subidaproductos.Actividades.CrearCliente;
 import com.example.subidaproductos.Actividades.CrearLocal;
+import com.example.subidaproductos.Actividades.CrearProducto;
 import com.example.subidaproductos.Adaptadores.ClienteAdaptador;
 import com.example.subidaproductos.Entidades.Cliente;
 import com.example.subidaproductos.Entidades.Local;
+import com.example.subidaproductos.Entidades.Producto;
 import com.firebase.ui.firestore.FirestoreRecyclerOptions;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -31,16 +33,19 @@ public class MainActivity extends AppCompatActivity {
 
     TextView txtNomCliente;
     TextView txtNomLocal;
+    TextView txtNomProducto;
     Button btnNuevoCliente;
     Button btnEscogerClientes;
     Button btnNuevoLocal;
     Button btnSubir;
+    Button btnNuevoProducto;
     Context context;
     FirebaseFirestore db;
     String idCliente;
 
     public static Cliente cliente;
     public static Local local;
+    public static Producto producto;
 
 
     ClienteAdaptador adaptadorCliente;
@@ -54,9 +59,11 @@ public class MainActivity extends AppCompatActivity {
 
         txtNomCliente = findViewById(R.id.txt_nocliente);
         txtNomLocal = findViewById(R.id.txt_nolocal);
+        txtNomProducto = findViewById(R.id.txt_noproducto);
         btnNuevoCliente = findViewById(R.id.btn_crear_cliente);
         btnEscogerClientes = findViewById(R.id.btn_escojer_cliente);
         btnNuevoLocal = findViewById(R.id.btn_crear_local);
+        btnNuevoProducto = findViewById(R.id.btn_crear_producto);
         btnSubir = findViewById(R.id.btn_subir);
 
 
@@ -97,6 +104,13 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 subirDatosFirestore();
+            }
+        });
+
+        btnNuevoProducto.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(MainActivity.this, CrearProducto.class));
             }
         });
 
@@ -150,6 +164,7 @@ public class MainActivity extends AppCompatActivity {
 
         if (cliente != null) txtNomCliente.setText(cliente.getNombre());
         if (local != null)txtNomLocal.setText(local.getNombre());
+        if (producto != null)txtNomProducto.setText(producto.getNombre());
     }
 
     private void inicializarAdaptadorClientes() {
